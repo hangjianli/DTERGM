@@ -3,6 +3,8 @@ from scipy.linalg import block_diag
 from functools import partial
 from utils import *
 import matlab.engine
+import time
+
 eng = matlab.engine.start_matlab()
 eng.addpath(eng.genpath('../gfl/'), nargout=0)
 
@@ -30,6 +32,8 @@ class stergmGraph:
         max_steps=100,
         newton_max_steps=100,
         converge_tol=1e-7,
+        gd_lr = 0.001,
+        gd_epochs = 500,
         verbose=1
     ):
         self.X = X
@@ -47,6 +51,8 @@ class stergmGraph:
         self.fml_form = Formula('nwf ~ ' + ' + '.join(form_terms))
         self.fml_diss = Formula('nwd ~ ' + ' + '.join(diss_terms))
         self.lamseq = lam
+        self.lr = gd_lr
+        self.epochs = gd_epochs
         self.mu = None
         self.H = np.zeros((self.tslen, self.n**2, self.p))  # compute H: T x E x p
         
@@ -58,7 +64,12 @@ class stergmGraph:
             self.H[i,:,:] = np.concatenate((lr_form, lr_diss), axis=2).reshape(self.n**2, self.p)   # row-first fill
     
     
-    def mple(self, initial_values=None, tau_inc=2, tau_dec=2, m=10):
+    def mple(self, 
+             initial_values=None, 
+             solver = 'newton', # 'newton' or 'gd'
+             tau_inc=2, 
+             tau_dec=2, 
+             m=10):
         """Maximum pseudo-likelihood estimation of theta via ADMM"""
         
         if initial_values:
@@ -77,13 +88,25 @@ class stergmGraph:
         while converged > self.converge_tol and steps < self.max_steps:
             if self.verbose > 0:
                 print(f"[INFO] ADMM step #{steps}")
-                print("\tUpdating theta...")
+                print("[INFO] Updating theta...")
             
             # update theta
-            theta = self.theta_gd_update(theta, z, u)
+            if solver == 'newton':
+                start = time.time()
+                theta = self.theta_update(z, u, theta)
+                end = time.time()
+                if self.verbose:
+                    print(f"[INFO] Newton converged in: {end - start}.")
+            else:
+                start = time.time()
+                theta = self.theta_gd_update(z, u, theta)
+                end = time.time()
+                if self.verbose:
+                    print(f"[INFO] Gradient descent converged in: {end - start}.")
+                
             
             if self.verbose > 0:
-                print("\tUpdating z...")
+                print("[INFO] Updating z...")
             
             # update z by solving group fused lasso (MATLAB)
             z_old = np.copy(z)
@@ -98,7 +121,7 @@ class stergmGraph:
             primal_residual = theta - z
             
             if self.verbose > 0:
-                print("\tUpdating u...")
+                print("[INFO] Updating u...")
                 
             # update u    
             u += primal_residual
@@ -122,12 +145,11 @@ class stergmGraph:
                     print(f"[INFO] decreasing alpha to {self.admm_alpha}")
                 
             if self.verbose > 0:
-#                 print(f"[INFO] theta: \n {pretty_str(theta[:5,:])}")
-                print(f"[INFO] max mu : \n {np.max(self.mu)}")
+                print(f"[INFO] max mu :  {np.max(self.mu)}")
                 print(f"[INFO] dual_resnorm: {dual_resnorm:.6f}")
                 print(f"[INFO] primal_resnorm: {primal_resnorm:.6f}")
                 print(f"[INFO] convergence: {converged:.6f}")
-                print('\n')
+                print("-------------------------------------------------")
             
             steps += 1
     
@@ -138,7 +160,7 @@ class stergmGraph:
     
    
     
-    def theta_update(self, theta, z, u):
+    def theta_update(self, z, u, theta):
         """Update theta via Newton method"""
         
         g = partial(self.theta_update_grad_f, z, u)
@@ -155,7 +177,6 @@ class stergmGraph:
             grad_f = g(theta)
   
             delta_theta = (-np.linalg.inv(hess_f) @ grad_f).reshape(theta.shape)
-#             delta_theta = (np.diag((-1. / np.diag(hess_f))) @  grad_f).reshape(theta.shape)
 
             converged = np.abs(np.sum(delta_theta.flatten()) / 2.)
             if converged <= self.rel_tol:
@@ -177,7 +198,6 @@ class stergmGraph:
         theta: T x p
         
         """
-#         H += 0.001 # a small perturbation to avoid divergence
         Z = np.sum(self.H * theta[:,np.newaxis, :], axis=2).squeeze() # compute log odds Zhat: T x E x 1 
         if self.verbose > 2:
             print(f"[INFO] Z(TxE): \n {pretty_str(Z, 3)}")
@@ -194,28 +214,29 @@ class stergmGraph:
         return hess # Tp x Tp
               
         
-    def theta_gd_update(self, theta, z, u, epochs=500, lr=0.001):
+    def theta_gd_update(self, z, u, theta):
         """Update theta via gradient descent """
         loss = []
-#         g = partial(self.theta_update_grad_f, z, u)
+        g = partial(self.theta_update_grad_f, z, u)
         converged = 1.
         
-        for it in range(epochs):        
-            delta_theta = lr * self.theta_update_grad_f(theta, z, u).reshape(theta.shape)
+        for it in range(self.epochs):        
+            delta_theta = self.lr * g(theta).reshape(theta.shape)
             converged = np.abs(np.sum(delta_theta.flatten()) / 2.)
             if converged < self.rel_tol:
-                print(f"Gradient descent converged. Epoch number {it}")
+                if self.verbose:
+                    print(f"Gradient descent converged. Epoch number {it}")
                 break
             theta -= delta_theta
             curloss = self.loss_lr(theta, z, u)
             if self.verbose > 2:
                 print(f"[INFO] Loss: {curloss: .5f}")
             loss.append(curloss) 
-            
         self.loss = loss
+        
         return theta
         
-    def theta_update_grad_f(self, theta, z, u):
+    def theta_update_grad_f(self,  z, u, theta):
         """Update the gradient in Newton step """
 
         Z = np.sum(self.H * theta[:,np.newaxis, :], axis=2).squeeze() # compute log odds Zhat: T x E x 1 
@@ -231,7 +252,7 @@ class stergmGraph:
     
     def g_delta(self, yt0, yt1):
         """ Compute the change stat in mple for all edges  """
-        # 1. take union. 2. run ergmMPLE, 3. correct
+        # 1. take union. 2. run ergmMPLE, 3. adjust
         ypos = np.logical_or(yt0, yt1).astype(int)
         yneg = np.logical_and(yt0, yt1).astype(int)
         nwpos = network.network(ypos)
@@ -257,7 +278,7 @@ class stergmGraph:
         
         
     def loss_lr(self, theta, z, u):
-        """objective function of first step in ADMM"""
+        """First objective function (LR) in ADMM"""
         y = self.X.reshape(self.tslen, -1) # T x E
         # negative pseudo log-likelihood
         predict_1 = y * np.log(self.mu)
