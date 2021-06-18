@@ -1,1 +1,1 @@
-Change point detection in Discrete-time ERGM 
+Change point detection in discrete temporal ERGM 
