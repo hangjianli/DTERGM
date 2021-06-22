@@ -34,6 +34,8 @@ class stergmGraph:
         converge_tol=1e-7,
         gd_lr = 0.001,
         gd_epochs = 500,
+        gfl_tol = 1e-6,
+        gfl_maxit=1000,
         verbose=1
     ):
         self.X = X
@@ -52,6 +54,8 @@ class stergmGraph:
         self.fml_diss = Formula('nwd ~ ' + ' + '.join(diss_terms))
         self.lamseq = lam
         self.lr = gd_lr
+        self.gfl_tol = gfl_tol,
+        self.gfl_maxit = gfl_maxit
         self.epochs = gd_epochs
         self.mu = None
         self.H = np.zeros((self.tslen, self.n**2, self.p))  # compute H: T x E x p
@@ -113,7 +117,7 @@ class stergmGraph:
             U = theta + u # observed singal, T x p
             Y = matlab.double(U.tolist())
             _lam = matlab.double([lam * self.admm_alpha for lam in self.lamseq])
-            res = eng.admm_gfl(Y, _lam)  
+            res = eng.admm_gfl(Y, _lam, self.gfl_tol, self.gfl_maxit)  
             z = np.asarray(res['X']).squeeze().T # T x p
             assert z.shape == (self.tslen, self.p)
             
@@ -293,7 +297,7 @@ def sigmoid(x):
 
 
 def safe_exp(x):
-    return np.exp(x.clip(-1000.,1000.))
+    return np.exp(x.clip(-50.,50.))
 
 
 #     def gstat_delta(self, yt0, yt1):
