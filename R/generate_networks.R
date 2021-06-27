@@ -2,7 +2,8 @@ rm(list=ls())
 library(tergm)
 library(network)
 library(ndtv)
-source('R/util.R')
+library(dplyr)
+source('util.R')
 
 #' Some candidate models
 #' form_model = ~ edges + mutual + transitiveties + cyclicalties
@@ -11,16 +12,16 @@ source('R/util.R')
 # coef.diss <- log(5 - 1)
 
 # user defined parameters -------------------------------------------------
-num_nodes = 50
-num_timepts = 100
-num_changepts = 5
+num_nodes = 20
+num_timepts = 40
+num_changepts = 4
 form_model=~edges+mutual
 diss_model=~edges+mutual
 
-phi1 = c(-1,1,2,-3,1)
-phi2 = c(-2,2,1,-1,3)
-phi3 = c(log(8),log(3), -log(2), log(2), log(10))
-phi4 = c(-2,2,-1,-1,3)
+phi1 = c(-1,1,2,-3,1)[1:num_changepts]
+phi2 = c(-2,2,1,-1,3)[1:num_changepts]
+phi3 = c(log(8),log(3), -log(2), log(2), log(10))[1:num_changepts]
+phi4 = c(-2,2,-1,-1,3)[1:num_changepts]
 coefs_pos = rbind(phi1, phi2)
 coefs_neg = rbind(phi3, phi4)
 # plot_model_param(num_timepts, num_changepts, coefs_pos, coefs_neg)
@@ -34,7 +35,7 @@ plot(g1)
 ginit = g1
 # sapply(res_adj_list, sum) # count number of edges for each graph
 # plot_nw_seq(stergm.sim, end=50)
-res <- simulate_nw_ts(
+sim <- simulate_nw_ts(
   form_model = form_model,
   diss_model = diss_model,
   coefs_pos = coefs_pos,
@@ -47,7 +48,20 @@ res <- simulate_nw_ts(
   ginit = g1
 )
 
+
+sim <- simulate_nw_ts_random(
+  form_model = form_model,
+  diss_model = diss_model,
+  coefs_pos = coefs_pos,
+  coefs_neg = coefs_neg,
+  num_timepts = num_timepts,
+  changepts = c(0, 5, 15, 30, 41),
+  num_nodes = num_nodes,
+  desc = "form: edge+mutual. diss: edge+mutual",
+  vers = 101, 
+  ginit = g1
+)
+
 df = as.data.frame(stergm.sim)
 df$duration %>% mean()
-
 

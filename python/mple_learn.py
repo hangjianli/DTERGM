@@ -115,9 +115,17 @@ class stergmGraph:
             # update z by solving group fused lasso (MATLAB)
             z_old = np.copy(z)
             U = theta + u # observed singal, T x p
+            
             Y = matlab.double(U.tolist())
             _lam = matlab.double([lam * self.admm_alpha for lam in self.lamseq])
-            res = eng.admm_gfl(Y, _lam, self.gfl_tol, self.gfl_maxit)  
+            _tol = matlab.double([self.gfl_tol])
+            _maxit = matlab.int16([self.gfl_maxit])
+
+            start = time.time()
+            res = eng.admm_gfl(Y, _lam, _tol, _maxit)  
+            end = time.time()
+            if self.verbose:
+                    print(f"[INFO] Group fused Lasso converged in: {end - start}.")
             z = np.asarray(res['X']).squeeze().T # T x p
             assert z.shape == (self.tslen, self.p)
             
@@ -291,6 +299,11 @@ class stergmGraph:
         
         return -np.sum(predict_1 + predict_0) + self.admm_alpha / 2 * penalty
         
+
+        
+def compute_mle():
+    pass
+    
 
 def sigmoid(x):
     return 1/(1 + safe_exp(-x))            

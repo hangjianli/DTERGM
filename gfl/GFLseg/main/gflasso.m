@@ -64,9 +64,9 @@ if ~isfield(option,'weights')
 end
 
 
-if option.verbose
-    fprintf('\nStarting gflasso with maxit=%d tol=%g verbose=%d\n',option.maxit,option.tol,option.verbose);
-end
+% if option.verbose
+%     fprintf('\nStarting gflasso with maxit=%d tol=%g verbose=%d\n',option.maxit,option.tol,option.verbose);
+% end
 
 
 % Store the mean signal per column (useful for reconstruction)

@@ -136,12 +136,55 @@ simulate_nw_ts <- function(
     cur_end = cur_end + time_stable
     ginit = network.extract(stergm.sim, at = cur_end) %>% network() 
   }
-  res = list()
-  res$nw = res_adj_list
-  res$coefs_pos = coefs_pos
-  res$coefs_neg = coefs_neg
-  res$desc = desc
-  saveRDS(res, paste0('data/res', vers, '.rds'))
-  return(res)
+  sim = list()
+  sim$nw = res_adj_list
+  sim$coefs_pos = coefs_pos
+  sim$coefs_neg = coefs_neg
+  sim$desc = desc
+  saveRDS(sim, paste0('../data/sim', vers, '.rds'))
+  return(sim)
 }
 
+simulate_nw_ts_random <- function(
+  form_model,
+  diss_model,
+  coefs_pos,
+  coefs_neg,
+  num_timepts,
+  changepts,
+  desc = 'form:[], diss: []',
+  vers=1,
+  num_nodes,
+  ginit){
+  res_adj_list = vector(mode = 'list', length = num_timepts)
+  for(i in 1:num_changepts){
+    cat('[INFO] Simulate from ', changepts[i], ' to ', changepts[i+1]-1, '\n')
+    stergm.sim <- simulate(
+      # if the input graph already has 'net.obs.period', to continue the simulation,
+      # we need to specify the time.start to be the end of 'net.obs.period'
+      ginit, 
+      formation=form_model,
+      dissolution=diss_model,
+      coef.form=coefs_pos[,i],
+      coef.diss=coefs_neg[,i],
+      nsim = 1, 
+      time.slices = changepts[i+1] - changepts[i],
+      time.start = changepts[i] # needs to be update everytime a new dynamic is generated
+    )
+    # newstart_nw%n%'net.obs.period' check https://github.com/statnet/tergm/blob/master/R/simulate.stergm.R for details
+    
+    for(t in  max(2, changepts[i]+1) : changepts[i+1]){
+      tmpnet = network.extract(stergm.sim, at = t) %>% network() 
+      res_adj_list[[t-1]] <- tmpnet[, ]
+    }
+    ginit = network.extract(stergm.sim, at = changepts[i+1]) %>% network() 
+  }
+  sim = list()
+  sim$nw = res_adj_list
+  sim$coefs_pos = coefs_pos
+  sim$coefs_neg = coefs_neg
+  sim$desc = desc
+  sim$changepts = changepts
+  saveRDS(sim, paste0('../data/sim', vers, '.rds'))
+  return(sim)
+}

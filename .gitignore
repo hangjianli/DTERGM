@@ -2,13 +2,15 @@
 .Rhistory
 .RData
 .Ruserdata
-**/.DS_Store
+.DS_Store
 .idea/
 
 # Ignore the pdf docs
 /papers
 
-
+# ignore data files
+/data
+/RDPG
 
 # obsolete codes
 **/R/trash

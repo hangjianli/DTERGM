@@ -1,3 +1,5 @@
+import numpy as np
+
 def pretty_str(p, decimal_places=2, join_str='\n'):
     '''Pretty-print a matrix or vector.'''
     if type(p) == list:
@@ -25,3 +27,12 @@ def matrix_str(p, decimal_places=2):
 def array_3d_str(p, decimal_places=2):
     '''Pretty-print the 3D array.'''
     return'[{0}]'.format("\n  ".join([matrix_str(a, decimal_places) for a in p]))
+
+
+def estimate_changepts(params, cutoff=4):
+    '''estimate the change points whose l2 norm of the change vector is larger than cutoff'''
+    theta = params['theta']
+    T = len(theta) - 1
+    mask = np.linalg.norm(np.diff(theta, axis=0), ord=2, axis=1) > cutoff
+    return np.arange(0, T)[mask]
+
