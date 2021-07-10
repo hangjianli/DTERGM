@@ -1,2 +1,0 @@
-# gfl
-Group fused lasso

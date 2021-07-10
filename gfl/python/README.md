@@ -1,3 +1,0 @@
-# PYTHON GTV LIB  #
-
-# DEPENDENCIES #
