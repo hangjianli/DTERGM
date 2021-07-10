@@ -4,6 +4,8 @@
 .Ruserdata
 .DS_Store
 .idea/
+python/.ipynb_checkpoints/
+gfl/*/GFLseq
 
 # Ignore the pdf docs
 /papers
@@ -11,6 +13,11 @@
 # ignore data files
 /data
 /RDPG
+/output
+/python/__pycache__
 
 # obsolete codes
 **/R/trash
+
+# ignore jupyter notebooks
+*.ipynb

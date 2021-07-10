@@ -2,6 +2,8 @@ import numpy as np
 import mple_learn_new
 import matlab.engine
 import argparse
+import ast
+import utils
 
 eng = matlab.engine.start_matlab()
 eng.addpath(eng.genpath('../gfl/'), nargout=0)
@@ -11,16 +13,15 @@ if __name__ == "__main__":
 
     # I/O settings
     parser.add_argument('outdir', help='The directory to which all of the output will be saved.')
-
-
     # mple settings
-    parser.add_argument('--lam', default=10, help="")
-    parser.add_argument('--admm_alpha', default=1, help="Initial ADMM step size.")
+    parser.add_argument('--lam', type=float, nargs="+", default=[10], help="")
+    parser.add_argument('--admm_alpha', type=float, default=1, help="Initial ADMM step size.")
     parser.add_argument('--solver', type=str, default='newton', help="Choose the solver for logistic regression.")
     parser.add_argument('--rel_tol', type=float, default=1e-7, help="Stopping criterion for change in theta.")
     parser.add_argument('--max_steps', type=int, default=100, help="Max iteration for ADMM.")
     parser.add_argument('--max_steps_newton', type=int, default=100, help="Max iterations for the Newton step.")
-    parser.add_argument('--conv_tol', type=float, default=1e-5, help="Stopping criterion for max of dual/primal residuals.")
+    parser.add_argument('--conv_tol', type=float, default=1e-5,
+                        help="Stopping criterion for max of dual/primal residuals.")
     parser.add_argument('--gd_lr', type=float, default=0.01, help="Gradient descent learning rate")
     parser.add_argument('--gd_epochs', type=int, default=100, help="Number of epochs for gradient descent.")
     parser.add_argument('--gfl_tol', type=float, default=1e-5, help="Stop criterion for group fused lasso.")
@@ -32,39 +33,53 @@ if __name__ == "__main__":
     np.seterr(all='raise')
 
     # Load setup info and data
-    with open(args.outdir + '/args/args.txt', 'r') as f:
-        sim_args = f.read()
+    print("Loading network statistics and edge data...")
+    experiment_dir = args.outdir + ('' if args.outdir.endswith('/') else '/')
+    with open(experiment_dir + 'args/args.txt', 'r') as f:
+        sim_args_str = f.read()
+    sim_args = ast.literal_eval(sim_args_str)
     p = len(sim_args['form_terms']) + len(sim_args['diss_terms'])
-    H = np.loadtxt(args.outdir + sim_args['data_name'] + '.txt')
-    y = np.loadtxt(args.outdir + sim_args['data_name'] + '.txt')
+    H = np.loadtxt(experiment_dir + sim_args['data_name'] + '_H.txt')
+    y = np.loadtxt(experiment_dir + sim_args['data_name'] + '_y.txt')
     t = H.shape[0]
-    H = H.reshape((t, -1, p))
-    n = H.shape[1]
-    print(f"(n, p, t) = ({n}, {p}, {t})")
+    H = H.reshape((t, -1, p)) # t x n^2(E) x p
+    n = np.sqrt(H.shape[1]).astype(int)
+    print(f"Data has dimension (t, n, p): ({t}, {n}, {p})")
 
+    # Get the output filenames
+    result_dir = utils.make_directory(experiment_dir, 'results')
+    args_dir = utils.make_directory(experiment_dir, 'args')
+    utils.save_args(args, args_dir + 'args_model.txt')
 
+    theta_outfile = result_dir + 'theta_' + sim_args['data_name'] + ".txt"
+    u_outfile = result_dir + 'u_' + sim_args['data_name'] + ".txt"
+    z_outfile = result_dir + 'z_' + sim_args['data_name'] + ".txt"
 
-
-
+    print('Initialize STERGM model...')
     model = mple_learn_new.STERGMGraph(
         lam=args.lam,
         admm_alpha=args.admm_alpha,
-        rel_tol= args.rel_tol,
+        rel_tol=args.rel_tol,
         max_steps=args.max_steps,
         newton_max_steps=args.max_steps_newton,
         converge_tol=args.conv_tol,
         gd_lr=args.gd_lr,
         gd_epochs=args.gd_epochs,
         gfl_tol=args.gfl_tol,
-        gfl_maxit=args.maxit,
+        gfl_maxit=args.gfl_maxit,
         verbose=sim_args["verbose"])
 
-    model.load_data(H, y, t, n, p)
+    model.load_data(H, y, t, p)
 
-    res = model.mple()
+    print("Run mple to estimate theta...")
+    res = model.mple(solver=args.solver)
     theta = res['theta']
     u = res['u']
     z = res['z']
-    np.savetxt(theta)
+
+    print("Saving estimated parameters...")
+    np.savetxt(theta_outfile, theta)
+    np.savetxt(u_outfile, u)
+    np.savetxt(z_outfile, z)
 
     print("Done!")

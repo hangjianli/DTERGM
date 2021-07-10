@@ -10,18 +10,21 @@ import time
 eng = matlab.engine.start_matlab()
 eng.addpath(eng.genpath('../gfl/'), nargout=0)
 
+
 class STERGMGraph:
-    def __init__(self, lam,
-                 admm_alpha=100,
-                 rel_tol=1e-7,
-                 max_steps=100,
-                 newton_max_steps=100,
-                 converge_tol=1e-7,
-                 gd_lr=0.001,
-                 gd_epochs=500,
-                 gfl_tol=1e-6,
-                 gfl_maxit=1000,
-                 verbose=1):
+    def __init__(
+            self, lam,
+            admm_alpha=100,
+            rel_tol=1e-7,
+            max_steps=100,
+            newton_max_steps=100,
+            converge_tol=1e-7,
+            gd_lr=0.001,
+            gd_epochs=500,
+            gfl_tol=1e-6,
+            gfl_maxit=1000,
+            verbose=1
+    ):
 
         self.admm_alpha = admm_alpha
         self.rel_tol = rel_tol
@@ -36,16 +39,11 @@ class STERGMGraph:
         self.epochs = gd_epochs
         self.mu = None
 
-
-    def load_data(self, H, y, t, n, p):
-        self.H = H
+    def load_data(self, h, y, t, p):
+        self.H = h
         self.y = y
         self.t = t
-        self.n = n
         self.p = p
-
-
-
 
     def mple(self, initial_values=None, solver='newton', tau_inc=2, tau_dec=2, m=10):
         """Maximum pseudo-likelihood estimation of theta via ADMM"""
@@ -55,9 +53,11 @@ class STERGMGraph:
             z = initial_values['z']
             u = initial_values['u']
         else:
-            theta = np.random.normal(size=(self.t, self.p))
-            z = np.zeros(size=(self.t, self.p))
-            u = np.zeros(size=(self.t, self.p))
+            theta = np.random.normal(loc=0, scale=0.2, size=(self.t, self.p))
+            # z = np.zeros((self.t, self.p))
+            u = np.zeros((self.t, self.p))
+            # z = np.copy(theta)
+            z = np.random.normal(loc=0, scale=0.2, size=(self.t, self.p))
 
         converged = self.converge_tol + 1.0
         steps = 0
@@ -168,7 +168,7 @@ class STERGMGraph:
             theta += delta_theta
 
             if self.verbose > 1:
-                print(f"[INFO] Loss = {self.loss(theta, z, u)}")
+                print(f"[INFO] Loss = {self.loss_lr(theta, z, u)}")
                 print(f"max of mu is {np.max(self.mu)}")
             steps += 1
 
@@ -182,8 +182,8 @@ class STERGMGraph:
         """
         Z = np.sum(self.H * theta[:, np.newaxis, :], axis=2).squeeze()  # compute log odds Zhat: T x E x 1
         if self.verbose > 2:
-            print(f"[INFO] Z(TxE): \n {pretty_str(Z, 3)}")
-            print(f"[INFO] H(TExTp): \n {pretty_str(H, 3)}")
+            print(f"[INFO] Z(TxE): \n {utils.pretty_str(Z, 3)}")
+            print(f"[INFO] H(TExTp): \n {utils.pretty_str(self.H, 3)}")
         mu = sigmoid(Z)  # mu: T x E
         W = mu * (1 - mu)  # W: T x E
         _hess1 = self.H.transpose(0, 2, 1) * W[:, np.newaxis, :]
@@ -199,7 +199,6 @@ class STERGMGraph:
         """Update theta via gradient descent """
         loss = []
         g = partial(self.theta_update_grad_f, z, u)
-        converged = 1.
 
         for it in range(self.epochs):
             delta_theta = self.lr * g(theta).reshape(theta.shape)
@@ -251,4 +250,3 @@ def sigmoid(x):
 
 def safe_exp(x):
     return np.exp(x.clip(-50., 50.))
-

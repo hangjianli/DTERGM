@@ -83,7 +83,7 @@ if __name__ == '__main__':
     utils.save_args(args, args_dir + 'args.txt')
 
     input_data = args.data_name + ('' if args.data_name.endswith('.rds') else '.rds')
-    H_outfile = output_dir + args.data_name + "_H_file.txt"
+    H_outfile = output_dir + args.data_name + "_H.txt"
     y_outfile = output_dir + args.data_name + "_y.txt"
 
     # load the data

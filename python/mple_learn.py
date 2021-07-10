@@ -66,6 +66,7 @@ class stergmGraph:
             else:
                 lr_form, lr_diss = self.g_delta(yt0=self.X[i - 1], yt1=self.X[i])
             self.H[i, :, :] = np.concatenate((lr_form, lr_diss), axis=2).reshape(self.n ** 2, self.p)  # row-first fill
+        # np.savetxt('testH.txt',  self.H.reshape(self.tslen, -1))
 
     def mple(self,
              initial_values=None,
