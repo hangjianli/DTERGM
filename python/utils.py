@@ -2,6 +2,7 @@ import numpy as np
 import os
 import json
 import csv
+from scipy.special import comb
 
 def pretty_str(p, decimal_places=2, join_str='\n'):
     '''Pretty-print a matrix or vector.'''
@@ -48,6 +49,14 @@ def make_directory(base, subdir):
     if not directory.endswith('/'):
         directory = directory + '/'
     return directory
+
+
+def compute_observed_log_likelihood(theta, a, suff_stats, n):
+    # l0 = -comb(n, 2) * np.log(2)
+    # theta * suff_stats -
+    """to be continued"""
+    pass
+
 
 def save_args(args, filename):
     with open(filename, 'w') as f:

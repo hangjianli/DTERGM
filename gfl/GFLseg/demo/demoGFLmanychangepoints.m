@@ -23,7 +23,7 @@ repeats=100;    % number of repeats to estimate probabilities
 
 % Initialize the random number generator
 s = RandStream.create('mt19937ar','seed',5489);
-RandStream.setDefaultStream(s);
+RandStream.setGlobalStream(s);
 
 
 

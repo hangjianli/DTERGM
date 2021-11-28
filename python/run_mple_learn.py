@@ -1,12 +1,39 @@
+"""
+p =
+H =
+y =
+"""
+
 import numpy as np
-import mple_learn_new
+import mple_learn
 import matlab.engine
 import argparse
 import ast
+import time
 import utils
+import matplotlib.pyplot as plt
 
 eng = matlab.engine.start_matlab()
 eng.addpath(eng.genpath('../gfl/'), nargout=0)
+
+def plot_theta(theta, filename, thr=3, change_pts=None):
+    """Plot """
+    t, p = theta.shape
+    fig, axx = plt.subplots(1, 1, figsize=(21, 5))
+    norm_diff = np.linalg.norm(np.diff(theta, axis=0), ord=2, axis=1)
+    estimated_change_pts = np.arange(t-1)[norm_diff > thr] + 1
+    print(f"The estimated change points are {estimated_change_pts}")
+    axx.plot(np.arange(1, t), norm_diff)
+    if change_pts is not None:
+        for i, cp in enumerate(change_pts):
+            axx.vlines(x = cp, ymin=0, ymax=max(norm_diff), ls = '--', color = 'r',
+                       label='True change points' if i == 0 else "")
+    axx.set_title("l2-norm difference in theta between t and t+1", fontsize=30)
+    fig.tight_layout()
+    plt.legend(fontsize=20)
+    plt.savefig(filename, bbox_inches='tight')
+    plt.close(fig)
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Run MPLE algorithm.')
@@ -26,7 +53,11 @@ if __name__ == "__main__":
     parser.add_argument('--gd_epochs', type=int, default=100, help="Number of epochs for gradient descent.")
     parser.add_argument('--gfl_tol', type=float, default=1e-5, help="Stop criterion for group fused lasso.")
     parser.add_argument('--gfl_maxit', type=int, default=1000, help="Max iter for group fused lasso.")
+
+    parser.add_argument('--true_cp', type=int, nargs="+", default=None, help="True change points (for plot).")
+    parser.add_argument('--cp_thr', type=float, default=3, help="Threshold for estimating change points.")
     # collect the command line inputs
+
     parser.set_defaults()
     args = parser.parse_args()
 
@@ -54,9 +85,10 @@ if __name__ == "__main__":
     theta_outfile = result_dir + 'theta_' + sim_args['data_name'] + ".txt"
     u_outfile = result_dir + 'u_' + sim_args['data_name'] + ".txt"
     z_outfile = result_dir + 'z_' + sim_args['data_name'] + ".txt"
+    theta_plot_dir = result_dir + 'est_theta_diff.png'
 
     print('Initialize STERGM model...')
-    model = mple_learn_new.STERGMGraph(
+    model = mple_learn.STERGMGraph(
         lam=args.lam,
         admm_alpha=args.admm_alpha,
         rel_tol=args.rel_tol,
@@ -72,7 +104,10 @@ if __name__ == "__main__":
     model.load_data(H, y, t, p)
 
     print("Run mple to estimate theta...")
+    start = time.time()
     res = model.mple(solver=args.solver)
+    end = time.time()
+    print(f"[INFO] MPLE finished in: {end - start}.")
     theta = res['theta']
     u = res['u']
     z = res['z']
@@ -82,4 +117,5 @@ if __name__ == "__main__":
     np.savetxt(u_outfile, u)
     np.savetxt(z_outfile, z)
 
+    plot_theta(theta, theta_plot_dir, args.cp_thr, args.true_cp)
     print("Done!")

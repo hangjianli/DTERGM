@@ -8,6 +8,7 @@ import rpy2.robjects as robjects
 from rpy2.robjects.packages import importr
 from rpy2.robjects import Formula
 from rpy2.robjects import numpy2ri
+import matplotlib.pyplot as plt
 numpy2ri.activate()
 
 network = importr(
@@ -21,70 +22,24 @@ network = importr(
 ergm = importr('ergm')
 readRDS = robjects.r['readRDS']
 
+def plot_theta(theta, filename, thr=3, change_pts=None):
+    """Plot """
+    t, p = theta.shape
+    fig, axx = plt.subplots(1, 1, figsize=(21, 5))
+    norm_diff = np.linalg.norm(np.diff(theta, axis=0), ord=2, axis=1)
+    estimated_change_pts = np.arange(t-1)[norm_diff > thr] + 1
+    print(f"The estimated change points are at {estimated_change_pts}")
+    axx.plot(np.arange(1, t), norm_diff)
+    if change_pts is not None:
+        for cp in change_pts:
+            axx.vlines(x = cp, ymin=0, ymax=max(norm_diff), ls = '--', color = 'r', label='True change points')
+    # for cp in estimated_change_pts:
+    #     axx.vlines(x = cp, ymin=0, ymax=max(norm_diff), ls = '--', color = 'g', label='Est. change points')
+    axx.set_title("l2-norm difference in theta between t and t+1")
+    fig.tight_layout()
+    plt.savefig(filename, bbox_inches='tight')
+    plt.close(fig)
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Generate synthetic data as drawn from an MRF via Gibbs sampling.')
-
-    # I/O settings
-    parser.add_argument('outdir', help='The directory to which all of the output will be saved.')
-    parser.add_argument('--data_name', help='Name of the raw input data.')
-    parser.add_argument('--verbose', type=int, default=0,
-                        help='Print detailed progress information to the console.'
-                             ' 0=none, 1=high-level only, 2=all details.')
-
-    parser.add_argument('-f', '--form_terms', nargs="+", default=['edges'], help='Formation network statistics.')
-    parser.add_argument('-d', '--diss_terms', nargs="+", default=['edges'], help='Dissolution network statistics.')
-    # parser.add_argument('--data_format', choices=['real', 'synthetic'], default='synthetic',
-    #                     help='The format of input data. Real data is a list of adj matrices while synthetic'
-    #                          'data is a list with nw, terms, and extra elements.')
-    parser.set_defaults()
-    # Get commands from command line
-    args = parser.parse_args()
-    np.seterr(all='raise')
-
-    # Get the input and output filenames
-    output_dir = args.outdir + ('' if args.outdir.endswith('/') else '/')
-    args_dir = utils.make_directory(output_dir, 'args')
-    print(vars(args))
-    utils.save_args(args, args_dir + 'args.txt')
-    # input_data = args.data_name + ('' if args.data_name.endswith('.rds') else '.rds')
-    # H_outfile = output_dir + args.data_name + "_H_file.txt"
-    # y_outfile = output_dir + args.data_name + "_y.txt"
-    #
-    # # load the data
-    # data = readRDS("../data/" + input_data)
-    # data = np.array(data).astype(int)
-    # t = len(data)
-    # n = len(data[0])
-    # p = len(args.form_terms) + len(args.diss_terms)
-    #
-    # print(f"time series length: {t}")
-    # print(f"network size: {n} x {n}")
-    # print(f"statistics dimension: {p}")
-    #
-    # H = np.zeros((t, n ** 2, p))  # compute H: T x E x p
-    # for i in range(t):
-    #     if i == 0:
-    #         lr_form, lr_diss = compute_change_statistics(
-    #             yt0=data[i],
-    #             yt1=data[i + 1],
-    #             form_terms=args.form_terms,
-    #             diss_terms=args.diss_terms)
-    #     else:
-    #         lr_form, lr_diss = compute_change_statistics(
-    #             yt0=data[i - 1],
-    #             yt1=data[i],
-    #             form_terms=args.form_terms,
-    #             diss_terms=args.diss_terms)
-    #     H[i, :, :] = np.concatenate((lr_form, lr_diss), axis=2).reshape(n ** 2, p)  # row-first fill
-    #
-    # y = data.reshape(t, -1)
-    #
-    # print('Saving change statistics...')
-    # print(f"shape of H: {H.shape}")
-    # print(f"shape of y: {y.shape}")
-    #
-    # np.savetxt(H_outfile, H.reshape(H.shape[0], -1))
-    # np.savetxt(y_outfile, y)
-    # print("Finished!")
+    simulate_random_graphs(10)

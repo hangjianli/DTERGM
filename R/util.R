@@ -188,3 +188,18 @@ simulate_nw_ts_random <- function(
   saveRDS(sim, paste0('../data/sim', vers, '.rds'))
   return(sim)
 }
+
+
+
+simulate_random_graphs <- function(n, nsim=1000){
+  nw_init = network(n)
+  gsim = simulate(~edges + mutual, nsim = nsim, 
+                  coef=c(0, 0), basis=nw_init)
+  res_adj_list = vector(mode = 'list', length = nsim)
+  for(i in 1:nsim){
+    res_adj_list[[t-1]] <- gsim[[i]][,]
+  }
+  
+  
+  
+}

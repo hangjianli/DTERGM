@@ -11,7 +11,7 @@ base = importr('base')
 ergm = importr('ergm')
 readRDS = robjects.r['readRDS']
 from rpy2.robjects import Formula
-from mple_learn import stergmGraph
+from mple_learn_depr import stergmGraph
 
 
 

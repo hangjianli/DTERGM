@@ -1,5 +1,7 @@
 """
 Generate change statistics from temporal network data
+
+The script generates and save H.txt and y.txt
 """
 import numpy as np
 import argparse
@@ -62,7 +64,7 @@ if __name__ == '__main__':
     # I/O settings
     parser.add_argument('outdir', help='The directory to which all of the output will be saved.')
     parser.add_argument('--data_name', help='Name of the raw input data.')
-    parser.add_argument('--verbose', type=int, default=0,
+    parser.add_argument('--verbose', type=int, default=1,
                         help='Print detailed progress information to the console.'
                              ' 0=none, 1=high-level only, 2=all details.')
 

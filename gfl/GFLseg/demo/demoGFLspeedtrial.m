@@ -39,7 +39,7 @@ speedK = zeros(2,nk);
 
 % Initialize the random number generator
 s = RandStream.create('mt19937ar','seed',5490);
-RandStream.setDefaultStream(s);
+RandStream.setGlobalStream(s);
     
 
 for trial = 1:nTrials

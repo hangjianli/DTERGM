@@ -1,6 +1,7 @@
 rm(list=ls())
 library(tergm)
 library(network)
+library(igraph)
 library(ndtv)
 library(dplyr)
 source('util.R')

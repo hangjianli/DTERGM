@@ -5,7 +5,13 @@
 .DS_Store
 .idea/
 python/.ipynb_checkpoints/
-gfl/*/GFLseq
+
+# Ignore gfl matlab dir
+gfl/*
+!gfl/GFLseq
+
+# Ignore gflsegpy python package
+/gflsegpy
 
 # Ignore the pdf docs
 /papers

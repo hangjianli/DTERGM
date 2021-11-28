@@ -10,7 +10,7 @@ disp('A small change point detection problem with the fused Lasso and the group 
 % Initialize the random number generator (to be able to reproduce the same
 % experiment)
 s = RandStream.create('mt19937ar','seed',5490);
-RandStream.setDefaultStream(s);
+RandStream.setGlobalStream(s);
 
 % Parameters of the experiments
 n=500;          % length of profiles
