@@ -26,4 +26,3 @@ gfl/*
 **/R/trash
 
 # ignore jupyter notebooks
-*.ipynb
