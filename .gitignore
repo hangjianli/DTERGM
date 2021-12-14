@@ -25,4 +25,5 @@ gfl/*
 # obsolete codes
 **/R/trash
 
-# ignore jupyter notebooks
+# ignore matlab files
+/gfl
