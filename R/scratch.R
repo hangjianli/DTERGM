@@ -34,4 +34,40 @@ n = 100
 p = 10
 
 
-genlasso()
+set.seed(1)
+n = 10
+t = 5
+nw_list = vector(mode = 'list', t)
+for(i in 1:t){
+  nw_list[[i]] = matrix(rbinom(n=n^2, size=1, prob = 0.5), n, n)
+}
+sim1nw = lapply(nw_list, network)
+sim1NS = NetSeries(sim1nw)
+res = ergm.bridge.dindstart.llk(
+  object = sim1NS ~ Form(~edges+mutual)+Diss(~edges+mutual),
+  coef = c(1,1,1,1),
+  verbose = T,
+  llkonly = F
+)
+
+res$llk.dind
+res$llr
+res$llk
+
+
+res2 = ergm.bridge.dindstart.llk(
+  object = sim1NS ~ Form(~edges)+Diss(~edges),
+  coef = c(0,0),
+  verbose = T,
+  llkonly = T,
+)
+
+sim1nw = lapply(scenario1_2, network)
+sim1NS = NetSeries(sim1nw)
+res = ergm.bridge.dindstart.llk(
+  object = sim1NS ~ Form(~edges+mutual)+Diss(~edges+mutual),
+  coef = c(-1,-2,3,1),
+  verbose = T,
+  llkonly = F
+)
+res

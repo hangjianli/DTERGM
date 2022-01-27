@@ -1,30 +1,26 @@
 import numpy as np
 import utils
-
+from gfl import *
 from scipy.linalg import block_diag
 from functools import partial
-
-import matlab.engine
 import time
-
-eng = matlab.engine.start_matlab()
-eng.addpath(eng.genpath('../gfl/'), nargout=0)
 
 
 class STERGMGraph:
     def __init__(
-            self,
-            lam,
-            admm_alpha=100,
-            rel_tol=1e-7,
-            max_steps=100,
-            newton_max_steps=100,
-            converge_tol=1e-7,
-            gd_lr=0.001,
-            gd_epochs=500,
-            gfl_tol=1e-6,
-            gfl_maxit=1000,
-            verbose=1
+        self,
+        lam,
+        admm_alpha=100,
+        rel_tol=1e-7,
+        max_steps=100,
+        newton_max_steps=100,
+        converge_tol=1e-7,
+        gd_lr=0.001,
+        gd_epochs=500,
+        gfl_tol=1e-6,
+        gfl_maxit=1000,
+        solver="newton",
+        verbose=1
     ):
 
         self.admm_alpha = admm_alpha
@@ -38,6 +34,7 @@ class STERGMGraph:
         self.gfl_tol = gfl_tol,
         self.gfl_maxit = gfl_maxit
         self.epochs = gd_epochs
+        self.solver = solver
         self.mu = None
 
     def load_data(self, h, y, t, p):
@@ -111,11 +108,12 @@ class STERGMGraph:
             _maxit = matlab.int16([self.gfl_maxit])
 
             start = time.time()
-            res = eng.admm_gfl(Y, _lam, _tol, _maxit)
+#             res = eng.admm_gfl(Y, _lam, _tol, _maxit)
+            res = gflasso(Y, _lam)
             end = time.time()
             if self.verbose:
                 print(f"[INFO] Group fused Lasso converged in: {end - start}.")
-            z = np.asarray(res['X']).squeeze().T  # T x p
+            z = np.asarray(res['_lam']['X']).squeeze().T  # T x p # TODO
             assert z.shape == (self.t, self.p)
 
             dual_residual = z - z_old

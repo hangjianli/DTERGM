@@ -1,6 +1,5 @@
 """
 Generate change statistics from temporal network data
-
 The script generates and save H.txt and y.txt
 """
 import numpy as np

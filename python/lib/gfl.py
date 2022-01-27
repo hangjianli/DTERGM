@@ -4,7 +4,7 @@ import logging
 
 logging.basicConfig(level=logging.INFO)
 
-def gflasso(y, lams):
+def gflasso(y, lams, verbose=0):
     """"""
     n, p = y.shape
     
@@ -20,7 +20,7 @@ def gflasso(y, lams):
     res = {}
     for lam in lams:
         # Optimize for this lambda with a warm restart from the previous lambda
-        output = optimize(beta, active_set, lam, C, y, w, verbose=1)
+        output = optimize(beta, active_set, lam, C, y, w, verbose=verbose)
         res[lam] = output.copy()
         
     return res
@@ -129,11 +129,6 @@ def block_coordinate_descent(beta, active_set, xty, n, w, lam, verbose=True):
         
         # compute the gain in the objective funtion at this iteration
         new_norm_beta = np.linalg.norm(newbeta)
-#         logging.info(gammai*(norm_beta[i] + new_norm_beta)/2 + lam)
-#         logging.info(S.shape)
-#         logging.info(newbeta)
-#         logging.info(beta[i,:])
-#         logging.info(S @ (newbeta - beta[i,:]))
 
         gain[i] = (gammai*(norm_beta[i] + new_norm_beta)/2 + lam)*(norm_beta[i]-new_norm_beta) + \
                     S @ (newbeta - beta[i,:])
@@ -268,29 +263,3 @@ def optimize(beta, active_set, lam, xty, y, w, verbose=1):
     t_end = time.time() - t_start
     logging.info(f"Total time: {t_end}")
     return res
-
-# class GFLasso:
-#     """
-#     A class to represent a person.
-
-#     ...
-
-#     Attributes
-#     ----------
-#     name : str
-#         first name of the person
-#     surname : str
-#         family name of the person
-#     age : int
-#         age of the person
-
-#     Methods
-#     -------
-#     info(additional=""):
-#         Prints the person's name and age.
-#     """
-
-#     def __init__(self, maxit=1e5, tol=1e-8):
-#         self.maxit = maxit
-#         self.tol = tol
-    
