@@ -5,6 +5,7 @@ rm(list = ls())
 
 ## Loading data
 load("../data/phonedata.RData")
+
 ## data goes from 14 Sept 2004 to 5 May 2005
 dim(mydata)
 #data[,,1] is the matrix correpsonding to the first  four hour block on day 1

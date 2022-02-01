@@ -10,7 +10,6 @@ def gflasso(y, lams, verbose=0):
     
     mean_signal = np.mean(y, axis=0)
     w = default_weights(n)
-
     lams = sorted(lams, key=lambda x: -x)
     nlambda = len(lams)
     C = left_multiply_by_xt(y, w)
@@ -133,7 +132,7 @@ def block_coordinate_descent(beta, active_set, xty, n, w, lam, verbose=True):
         gain[i] = (gammai*(norm_beta[i] + new_norm_beta)/2 + lam)*(norm_beta[i]-new_norm_beta) + \
                     S @ (newbeta - beta[i,:])
 
-        if verbose:
+        if verbose > 0:
             logging.info(f"[BCD] Iter {itc}, update block {asi}, gain={gain[i]}\n")
 
         # update beta

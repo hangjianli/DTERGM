@@ -200,6 +200,4 @@ simulate_random_graphs <- function(n, nsim=1000){
     res_adj_list[[t-1]] <- gsim[[i]][,]
   }
   
-  
-  
 }

@@ -60,5 +60,5 @@ def compute_observed_log_likelihood(theta, a, suff_stats, n):
 
 def save_args(args, filename):
     with open(filename, 'w') as f:
-        json.dump(vars(args), f)
+        json.dump(args, f)
         f.write('\n')

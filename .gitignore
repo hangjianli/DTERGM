@@ -5,6 +5,7 @@
 .DS_Store
 .idea/
 python/.ipynb_checkpoints/
+python/*/.ipynb_checkpoints/
 
 # Ignore gfl matlab dir
 gfl/*

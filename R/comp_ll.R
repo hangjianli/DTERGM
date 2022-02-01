@@ -2,6 +2,7 @@
 # install.packages('ergm')
 library(ergm)
 library(tergm)
+
 library(dplyr)
 
 coef(samplk2)
@@ -21,7 +22,7 @@ res <- ergm.bridge.dindstart.llk(
   verbose = T
 )
 
-remotes::install_github("statnet/tergm")
+# remotes::install_github("statnet/tergm")
 # ergm.bridge.dindstart.llk<-function(object, response=NULL, constraints=~., 
 #                                     coef, obs.constraints=~.-observed, 
 #                                     target.stats=NULL, dind=NULL, coef.dind=NULL, 
@@ -36,6 +37,7 @@ ergm.bridge.dindstart.llk(
   coef = c(1,1,1,1),
   verbose = T
 )
+
 object = sim1NS ~ Form(~edges+mutual)+Diss(~edges+mutual)
 basis = ergm.getnetwork(object)
 
