@@ -1,6 +1,6 @@
 rho_a = 0
 num_time = 500
-n = 100
+n = 200
 library(dplyr)
 library("Matrix")
 
@@ -97,5 +97,17 @@ df = vector(mode = "list", length = num_time)
 for(t in 1:num_time){
   df[[t]] = matrix(data[,t], n, n)
 }
-saveRDS(df, paste0('../data/sbm/sbm_rho00n100t500.rds'))
+saveRDS(df, paste0('../data/sbm/sbm_rho00n200t500.rds'))
 # as(df[[29]] , "CsparseMatrix") %>% image()
+
+
+# sbm3
+# data <- readRDS('../data/sbm/sbm_rho00n100t500.rds')
+# network_list = lapply(data, network)
+# res = tergm(
+#   network_list~
+#     Form(~edges + mutual)+
+#     Diss(~edges + mutual),
+#   estimate = "CMLE"
+# )
+

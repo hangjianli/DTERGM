@@ -14,13 +14,20 @@ nw_list = vector(mode = 'list', t)
 for(i in 1:t){
   nw_list[[i]] = matrix(rbinom(n=n^2, size=1, prob = 0.5), n, n)
 }
+
+saveRDS(nw_list, file = "../data/test_nw_list.rds")
+
 sim1nw = lapply(nw_list, network)
 sim1NS = NetSeries(sim1nw)
+
 res <- ergm.bridge.dindstart.llk(
   object = sim1NS ~ Form(~edges+mutual)+Diss(~edges+mutual),
   coef = c(-2,-1,1,1),
   verbose = T
 )
+
+res
+
 
 # remotes::install_github("statnet/tergm")
 # ergm.bridge.dindstart.llk<-function(object, response=NULL, constraints=~., 

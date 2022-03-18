@@ -109,7 +109,10 @@ simulate_nw_ts <- function(
   desc = 'form:[], diss: []',
   vers=1,
   num_nodes,
-  ginit){
+  exogenous=F,
+  output_path='../data/ergm/sim',
+  ginit
+){
   time_stable = num_timepts / num_changepts
   cur_end = 0
   res_adj_list = vector(mode = 'list', length = num_timepts)
@@ -136,12 +139,18 @@ simulate_nw_ts <- function(
     cur_end = cur_end + time_stable
     ginit = network.extract(stergm.sim, at = cur_end) %>% network() 
   }
+  
   sim = list()
   sim$nw = res_adj_list
   sim$coefs_pos = coefs_pos
   sim$coefs_neg = coefs_neg
   sim$desc = desc
-  saveRDS(sim, paste0('../data/sim', vers, '.rds'))
+  
+  if(exogenous){
+    sex = get.node.attr(ginit, 'Sex')
+    sim$sex = sex
+  }
+  saveRDS(sim, paste0(output_path, vers, '.rds'))
   return(sim)
 }
 

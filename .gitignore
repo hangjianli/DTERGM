@@ -4,8 +4,8 @@
 .Ruserdata
 .DS_Store
 .idea/
-python/.ipynb_checkpoints/
-python/*/.ipynb_checkpoints/
+.ipynb_checkpoints
+__pycache__
 
 # Ignore gfl matlab dir
 gfl/*
@@ -21,7 +21,6 @@ gfl/*
 /data
 /RDPG
 /output
-/python/__pycache__
 
 # obsolete codes
 **/R/trash

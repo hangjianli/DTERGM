@@ -38,6 +38,18 @@ data[,1] %>% matrix(nrow = 96) %>% dim
 
 data <- readRDS('../data/mit.rds')
 
+# apply tergm -------------------------------------------------------------
+
+network_list = apply(data, 1, network)
+res = tergm(
+  network_list~
+    Form(~edges + mutual)+
+    Diss(~edges + mutual),
+  estimate = "CMLE"
+)
+
+
+
 yt0 =data[1,,] 
 testnw = network(yt0, directed = F)
 a = ergm(testnw ~ edges + triangles)
